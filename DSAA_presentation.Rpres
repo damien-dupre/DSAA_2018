@@ -1,0 +1,431 @@
+<style>
+
+.reveal h1, .reveal h2, .reveal h3 {
+  word-wrap: normal;
+  -moz-hyphens: none;
+}
+
+.reveal h1 { 
+  font-size: 2em; 
+}
+
+.reveal pre code {
+  font-size: 1em;
+}
+
+.footer {
+    color: black; background: #E8E8E8;
+    position: fixed; top: 90%;
+    text-align:center; width:100%;
+}
+
+.midcenter {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}
+
+img  {
+    box-shadow: none !important;
+}
+
+</style>
+
+
+Willingness to Share Emotion Information on Social Media
+========================================================
+author: Influence of Personality and Social Context
+autosize: true
+Damien Dupre, University College Dublin<br>
+Gary McKeown and Nicole Andelic, Queen's University Belfast<br>
+Gawain Morrison, Sensum Ltd.
+<div class="footer" style="margin-top:-50px;font-size:80%;">
+IEEE International Conference on Data Science and Advanced Analytics (DSAA) <br>
+SeCredISData - Sentiment, Emotion, and Credibility of Information in Social Data <br>
+October 4th, 2018 - Turin, Italy
+</div>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(tidyr)
+library(dplyr)
+library(purrr)
+library(MASS)
+library(pROC)
+library(ggplot2)
+library(ggpubr)
+options(scipen = 999) #disable sci number format
+set.seed(1)
+df_raw <- readRDS("C:/Users/Damien/Desktop/data_emotion_social_media.rds")
+df_tidy <- df_raw %>% 
+  tidyr::gather(
+    pers_trait,
+    pers_score,
+    c("Agreeableness","Conscientiousness","Emotional_Stability","Extraversion","Openness")) %>%
+  tidyr::gather(
+    share_emotion,
+    share_value,
+    c("share_sr","share_fe"))
+```
+
+People Sharing Content on Social Media
+========================================================
+incremental: true
+
+People are sharing **two types** of content:
+
+1. Informations
+<blockquote class="twitter-tweet" data-lang="de"><p lang="en" dir="ltr">[...] I think that would qualify as not smart, but genius....and a very stable genius at that!</p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realDonaldTrump/status/949619270631256064">06. Jan. 2018</a></blockquote>
+2. Emotions
+<blockquote class="twitter-tweet" data-lang="de"><p lang="en" dir="ltr">[...]NEVER, EVER THREATEN THE UNITED STATES AGAIN OR YOU WILL SUFFER CONSEQUENCES THE LIKES OF WHICH FEW THROUGHOUT HISTORY HAVE EVER SUFFERED BEFORE.[...]</p>&mdash; Donald J. Trump (@realDonaldTrump) <a href="https://twitter.com/realdonaldtrump/status/1021234525626609666">23. Jul. 2018</a></blockquote>
+
+What is an emotion?
+========================================================
+
+An emotion is the result of **internal** and **external** modifications triggered by an "**event**"  (Tcherkassof, 2008).
+
+Seven characteristics distinguish Emotions to other cognitive states:
+- Event focus
+- Appraisal driven
+- Response synchronization
+- Rapidity of change
+- Intensity
+- Duration
+- Physiological and behavioral impact
+
+Expressing emotions on Social Media
+========================================================
+
+People can actively express emotions in social media by sharing texts, emojis, and medias (images, sounds or videos).
+
+However with the wild spread of front facing cameras it is now possible to share emotions by analysing people's facial expressions.
+
+<img src="http://19yw4b240vb03ws8qm25h366-wpengine.netdna-ssl.com/wp-content/uploads/faciometrics-intraface-app-1024x562.png" style="height:200px;" align="center"></img>
+
+
+<div class="footer" style="margin-top:-100px;font-weight:bold;">
+In our research we are interested in evaluating if people are ready to share their emotions throught their facial expressions and what can influence their willingness to share these informations.
+</div>
+
+Factors influencing the willingness to share emotion information (1)
+========================================================
+
+**Personality traits** play an important role not only in the way people are expressing emotion (Wache et al., 2015) but also in the way people share them (Dhir et al., 2016). 
+
+According to the Big 5 model, personalities can be distingused by 5 strable traits:
+- Openness (degree of intellectual curiosity and creativity),
+- Conscientiousness (tendency to be efficient and organized),
+- Extroversion (tendency to seek new and strong stimuli),
+- Agreeableness (tendency to be compassionate and cooperative),
+- Neuroticism (individual's "emotional stability").
+
+Factors influencing the willingness to share emotion information (2)
+========================================================
+
+**Motivation to use Social Medias** can also influence people's willingness to share emotions.
+
+Ujhelyi and Szabo (2014) have identified four types of motivations that underpin sharing behaviours:
+- Experience sharing (sharing interesting/important facts and being the first to share it),
+- Positive self-presentation and popularity seeking (sharing valorised events or having positive reactions),
+- Information spreading (sharing relevant information).
+- Reducing loneliness and boredom (not investigated in this research)
+
+Hypotheses
+========================================================
+![](./DSAA_presentation-figure/hyp.png)
+
+* Effect of personality traits on willingness to share emotions
+* Effect of motivation on willingness to share emotions
+* Interaction effect between personality and motivation on willingness to share emotions
+
+Experiment Method
+========================================================
+type: section
+
+Experiment Design
+========================================================
+![](./DSAA_presentation-figure/exp_design.png)
+
+Participants were asked if they were willing to share their **self-reported emotion** as well as their **facial expression** on social media with **Yes/No answers**.
+
+Experiment Method
+========================================================
+
+197 participants were recruited via online survey platforms (93 males, 97 females, age M = 44.9, SD = 14.7).
+
+After each video, a feedback was given to the participants to increase their motivation to share their emotion:
+
+1. **No feedback**
+2. **Information Spreading** (e.g. "Your emotion was XX%")
+3. **Experience Sharing** (e.g. "X persons already shared their emotions")
+4. **Popularity Seeking** (e.g. "The average emotion felt by previous people is XX%. Yours is XX%")
+
+Results
+========================================================
+type: section
+
+Effect of Feedback on Emotion Sharing
+========================================================
+```{r, fig.width=20, fig.height=8,fig.align='center'}
+df_tidy %>%
+  ggplot(aes(sessid, share_value, fill = share_emotion)) +
+  stat_summary_bin(fun.y = "mean", geom = "bar", position=position_dodge())+
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", position=position_dodge(0.9), width=.2)+
+  stat_compare_means(aes(group = share_emotion), label = "p.signif", method = "t.test",label.y = 0.75, size = 20, symnum.args = list(cutpoints = c(0, 0.001, 0.01, 0.05, 1), symbols = c("***", "**", "*", "ns")))+
+  theme_minimal()+
+  scale_y_continuous("Agreement\nto Share Emotion",labels = scales::percent, limits = c(0,1))+
+  scale_x_discrete("Motivation Feedback",labels=c("Control", "Information\nspreading", "Experience\nsharing","Popularity\nseeking"))+ 
+  scale_fill_discrete(name="Type",labels=c("Facial Expression", "Self Report"))+
+  theme(text = element_text(size=40),
+        axis.title.x = element_text(margin = margin(t = 20, r = 0, b = 0, l = 0)))
+```
+
+- Self-Report easier to share than Facial Expression
+- No effect of feedback on self-report but ...
+- The willingness to share facial expression is negatively/positively influenced by feedback 
+
+Effect of Personality on Emotion Sharing
+========================================================
+
+```{r, fig.width=15, fig.height=6,fig.align='left'}
+glm_eqn = function(df){
+  m <- glm(share_value~pers_score, df,family = "binomial")
+  glm_res <- paste0("Est. = ", round(summary(m)$coefficients[2,1], digits = 3), "\np = ",round(summary(m)$coefficients[2,4], digits = 3))
+  as.character(as.expression(glm_res))
+}
+#
+eqns <-  by(df_tidy, 
+            list(df_tidy$share_emotion, df_tidy$pers_trait),
+            glm_eqn)
+#
+eqns <-  data.frame(unclass(eqns)) %>%
+  tibble::rownames_to_column("share_emotion") %>%
+  tidyr::gather(pers_trait, glm_res, -share_emotion) 
+#
+df_tidy %>%
+  ggplot(aes(pers_score, share_value, color = share_emotion))+
+  geom_jitter(height = 0.05, alpha = 0.4)+ 
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=TRUE,fullrange = TRUE)+
+  facet_wrap(~pers_trait, nrow = 1)+
+  coord_cartesian(xlim=c(0,100), ylim=c(0,1))+
+  geom_text(data = subset(eqns, share_emotion == "share_fe"), aes(x = 70, y = 0.25, label = glm_res), parse  = FALSE, size = 8)+
+  geom_text(data = subset(eqns, share_emotion == "share_sr"), aes(x = 30, y = 0.75, label = glm_res), parse  = FALSE, size = 8)+
+  scale_y_continuous("Agreement\nto Share Emotion",labels = scales::percent)+
+  scale_x_continuous("Personality Trait Score")+
+  scale_color_discrete(name="Type",labels=c("Facial Expression", "Self Report")) +
+  theme_minimal() +
+  theme(text = element_text(size=25), legend.position = "bottom")
+```
+
+- Most of them are non significant, but...
+- Effect of Emo. Stability, Extraversion and Openness on Willingness to share facial expressions
+
+Combining Personality and Motivation in a Multilevel Model
+========================================================
+
+Necessity to fit data in a Generalized Linear Mixed Models (GLMM) which incorporates both fixed-effects parameters and random effects in a linear predictor.
+
+```{r eval = FALSE, echo = TRUE}
+MASS::glmmPQL(data = df_raw,
+              fixed = share_sr ~ 
+                sessid * Extraversion + 
+                sessid * Agreeableness + 
+                sessid * Conscientiousness + 
+                sessid * Emotional_Stability + 
+                sessid * Openness,
+              random = ~ 1 | task,
+              family = binomial)
+
+MASS::glmmPQL(data = df_raw,
+              fixed = share_fe ~ 
+                sessid * Extraversion + 
+                sessid * Agreeableness + 
+                sessid * Conscientiousness + 
+                sessid * Emotional_Stability + 
+                sessid * Openness,
+              random = ~ 1 | task,
+              family = binomial)
+```
+
+
+Personality x Motivation for Self Report
+========================================================
+
+```{r , fig.width=15, fig.height=8,fig.align='left'}
+#share self-report
+df_tidy %>%
+  dplyr::filter(share_emotion == "share_sr") %>%
+  ggplot(aes(x = pers_score,y = share_value, color = sessid)) + 
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE,fullrange=TRUE) +
+  facet_grid(~pers_trait)+
+  scale_color_discrete(name="Feedback\nCondition",labels=c("Control", "Information\nspreading", "Experience\nsharing","Popularity\nseeking")) +
+  scale_y_continuous("Agreement to Share\nSelf-Report",labels = scales::percent)+
+  scale_x_continuous("Personality Trait Score")+
+  theme_minimal()+
+  theme(text = element_text(size=25))
+```
+
+Personality x Motivation for Self Report
+========================================================
+transition: none
+
+```{r , fig.width=15, fig.height=8,fig.align='left'}
+glmm_sr <- df_raw %>%
+  MASS::glmmPQL(data = .,
+                share_sr ~ 
+                  sessid * Extraversion + 
+                  sessid * Agreeableness + 
+                  sessid * Conscientiousness + 
+                  sessid * Emotional_Stability + 
+                  sessid * Openness, 
+                random = ~ 1 | task,
+                family = binomial, 
+                verbose = FALSE)
+#
+glmm_sr_signif <- summary(glmm_sr)$tTable %>%
+  as.data.frame()%>%
+  tibble::rownames_to_column("effects")%>%
+  dplyr::filter(`p-value`<0.05)%>%
+  tidyr::separate(effects, c("feedback", "pers_trait"),sep = ":") %>%
+  dplyr::mutate(feedback = gsub("sessid", "", feedback))%>%
+  na.omit()%>%
+  tidyr::unite(effects,feedback,pers_trait,remove = FALSE) %>%
+  magrittr::use_series("effects")
+#
+df_tidy %>%
+  dplyr::filter(share_emotion == "share_sr") %>%
+  tidyr::unite(effects,sessid,pers_trait,remove = FALSE)%>%
+  dplyr::mutate(signif = ifelse(effects %in% glmm_sr_signif,"yes","no")) %>%
+  dplyr::mutate(signif = factor(signif, levels = c("yes","no"))) %>%
+  ggplot(aes(x = pers_score,y = share_value, color =  sessid, linetype = signif)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE,fullrange=TRUE) +
+  facet_grid(~pers_trait) +
+  scale_color_discrete(name="Feedback\nCondition",labels=c("Control", "Information\nspreading", "Experience\nsharing","Popularity\nseeking")) +
+  scale_y_continuous("Agreement to Share\nSelf-Report",labels = scales::percent)+
+  scale_x_continuous("Personality Trait Score")+
+  theme_minimal()+
+  theme(text = element_text(size=25))
+```
+
+Personality x Motivation for Facial Expression
+========================================================
+
+```{r , fig.width=15, fig.height=8,fig.align='left'}
+#share facial expression
+df_tidy %>%
+  dplyr::filter(share_emotion == "share_fe") %>%
+  ggplot(aes(x = pers_score,y = share_value, color = sessid)) + 
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE,fullrange=TRUE) +
+  facet_grid(~pers_trait)+
+  scale_color_discrete(name="Feedback\nCondition",labels=c("Control", "Information\nspreading", "Experience\nsharing","Popularity\nseeking")) +
+  scale_y_continuous("Agreement to Share\nFacial Expression",labels = scales::percent)+
+  scale_x_continuous("Personality Trait Score")+
+  theme_minimal()+
+  theme(text = element_text(size=25))
+```
+
+Personality x Motivation for Facial Expression
+========================================================
+transition: none
+
+```{r , fig.width=15, fig.height=8,fig.align='left'}
+glmm_fe <- df_raw %>%
+  MASS::glmmPQL(data = .,
+                share_fe ~ 
+                  sessid * Extraversion + 
+                  sessid * Agreeableness + 
+                  sessid * Conscientiousness + 
+                  sessid * Emotional_Stability + 
+                  sessid * Openness, 
+                random = ~ 1 | task,
+                family = binomial, 
+                verbose = FALSE)
+#
+glmm_fe_signif <- summary(glmm_fe)$tTable %>%
+  as.data.frame()%>%
+  tibble::rownames_to_column("effects")%>%
+  dplyr::filter(`p-value`<0.05)%>%
+  tidyr::separate(effects, c("feedback", "pers_trait"),sep = ":") %>%
+  dplyr::mutate(feedback = gsub("sessid", "", feedback))%>%
+  na.omit()%>%
+  tidyr::unite(effects,feedback,pers_trait,remove = FALSE) %>%
+  magrittr::use_series("effects")
+#
+df_tidy %>%
+  dplyr::filter(share_emotion == "share_fe") %>%
+  tidyr::unite(effects,sessid,pers_trait,remove = FALSE)%>%
+  dplyr::mutate(signif = ifelse(effects %in% glmm_fe_signif,"yes","no")) %>%
+  dplyr::mutate(signif = factor(signif, levels = c("yes","no"))) %>%
+  ggplot(aes(x = pers_score,y = share_value, color =  sessid, linetype = signif)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE,fullrange=TRUE) +
+  facet_grid(~pers_trait) +
+  scale_color_discrete(name="Feedback\nCondition",labels=c("Control", "Information\nspreading", "Experience\nsharing","Popularity\nseeking")) +
+  scale_y_continuous("Agreement to Share\nFacial Expression",labels = scales::percent)+
+  scale_x_continuous("Personality Trait Score")+
+  theme_minimal()+
+  theme(text = element_text(size=25))
+```
+
+Model Accuracy
+========================================================
+left: 50%
+
+```{r fig.align='left'}
+df_raw$share_fe_prob <- predict(glmm_fe, type = "response")
+df_raw$share_sr_prob <- predict(glmm_sr, type = "response")
+# Find the sharing probability
+#mean(df_raw$share_fe)
+#mean(df_raw$share_sr)
+# Predict a sharing if probability of sharing is greater than average
+df_raw$share_fe_pred <- ifelse(df_raw$share_fe_prob > mean(df_raw$share_fe), 1, 0)
+df_raw$share_sr_pred <- ifelse(df_raw$share_sr_prob > mean(df_raw$share_sr), 1, 0)
+# Calculate the model's accuracy
+#mean(df_raw$share_fe == df_raw$share_fe_pred)
+#mean(df_raw$share_sr == df_raw$share_sr_pred)
+# Calculate ROC
+ROC_fe <- roc(df_raw$share_fe, df_raw$share_fe_prob)
+ROC_sr <- roc(df_raw$share_sr, df_raw$share_sr_prob)
+# Plot ROC
+plot(ROC_fe, col = "red", cex=1.5)
+plot(ROC_sr, add = TRUE, col = "blue", cex=1.5)
+legend(0.5, 0.4, legend=c("Facial Expression", "Self-Report"),
+       col=c("red", "blue"), lty=1, cex=1.5, box.lty=0)
+# Calculate the area under the curve (AUC)
+AUC_fe <- round(as.numeric(auc(ROC_fe)), 2)
+AUC_sr <- round(as.numeric(auc(ROC_sr)), 2)
+```
+***
+AUC for Facial Expression model is **`r AUC_fe`** whereas AUC for Self-Report model is **`r AUC_sr`**.
+
+Prediction more accurate in a GLMM with **random effect** and taking into account not only contextual and dispositional variables but also their **interactions as fixed effects**.
+
+Conclusion
+========================================================
+
+(too?) many limits of the procedure:
+- only willigness not behavior
+- effectiveness validation of the motivation feedback
+- little difference between the videos (order effect?)
+
+But a very interesting approach **mixing dispositional factors (personality) and contextual factors (motivation)** to evaluate social media users activity.
+
+Thanks for your attention!
+========================================================
+type: section
+**Willingness to Share Emotion Information on Social Media:**
+**Influence of Personality and Social Context**
+
+Damien Dupre, University College Dublin<br>
+Gary McKeown and Nicole Andelic, Queen's University Belfast<br>
+Gawain Morrison, Sensum Ltd.
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+
+for(i=0;i<$("section").length;i++) {
+if(i==0) continue
+$("section").eq(i).append("<p style='font-size:medium;position:fixed;right:10px;bottom:10px;'>" + i + "</p>")
+}
+
+</script>
