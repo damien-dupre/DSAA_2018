@@ -80,9 +80,6 @@ People can actively express emotions in social media by sharing texts, emojis, a
 
 However with the wild spread of front facing cameras it is now possible to share emotions by analysing people's facial expressions.
 
-<img src="http://19yw4b240vb03ws8qm25h366-wpengine.netdna-ssl.com/wp-content/uploads/faciometrics-intraface-app-1024x562.png" style="height:200px;" align="center"></img>
-
-
 <div class="footer" style="margin-top:-100px;font-weight:bold;">
 In our research we are interested in evaluating if people are ready to share their emotions throught their facial expressions and what can influence their willingness to share these informations.
 </div>
